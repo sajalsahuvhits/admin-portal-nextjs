@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 type Subadmin = {
   id: number;
@@ -16,12 +17,12 @@ const dummyData: Subadmin[] = Array.from({ length: 23 }, (_, i) => ({
   email: `subadmin${i + 1}@example.com`,
 }));
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 export default function Subadmins() {
   const [subadmins, setSubadmins] = useState<Subadmin[]>([]);
   const [page, setPage] = useState(1);
-
+    const router = useRouter();
   useEffect(() => {
     const start = (page - 1) * PAGE_SIZE;
     const end = start + PAGE_SIZE;
@@ -43,8 +44,8 @@ export default function Subadmins() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-semibold">Subadmins</h2>
         <Link
-          href="/admin/_authPages/subadmins/add"
-          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+          href="/admin/subadmins/add"
+          className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded"
         >
           <Plus size={18} /> Add Subadmin
         </Link>
@@ -68,7 +69,9 @@ export default function Subadmins() {
                 <td className="px-4 py-2">{admin.email}</td>
                 <td className="px-4 py-2">
                   <div className="flex items-center gap-2">
-                    <button className="text-blue-600 hover:underline" title="Edit">
+                    <button className="text-blue-600 hover:underline" title="Edit" onClick={()=>{
+                        router.push(`/admin/subadmins/edit/${admin.id}`)
+                    }}>
                       <Pencil size={16} />
                     </button>
                     <button
