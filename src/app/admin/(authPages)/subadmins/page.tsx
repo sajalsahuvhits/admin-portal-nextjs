@@ -1,9 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from "react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { doDelete, doGet } from "@/config/DataService";
+import Api from "@/lib/Api";
+import { ISubAdmin } from "@/types/types";
+import { Loader } from "@/components/Loader";
 
 type Subadmin = {
   id: number;
@@ -20,24 +24,32 @@ const dummyData: Subadmin[] = Array.from({ length: 23 }, (_, i) => ({
 const PAGE_SIZE = 10;
 
 export default function Subadmins() {
-  const [subadmins, setSubadmins] = useState<Subadmin[]>([]);
+  const [subadmins, setSubadmins] = useState<ISubAdmin[]>([]);
   const [page, setPage] = useState(1);
-    const router = useRouter();
-  useEffect(() => {
-    const start = (page - 1) * PAGE_SIZE;
-    const end = start + PAGE_SIZE;
-    setSubadmins(dummyData.slice(start, end));
-  }, [page]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   const totalPages = Math.ceil(dummyData.length / PAGE_SIZE);
-
-  const handleDelete = (id: number) => {
-    const confirmed = confirm('Are you sure you want to delete this subadmin?');
+  const fetchData = async () => {
+    setLoading(true);
+    const resp = await doGet(Api.Admin.SUBADMIN);
+    setSubadmins(resp.data || []);
+    setLoading(false);
+  };
+  const handleDelete = async (id: string) => {
+    const confirmed = confirm("Are you sure you want to delete this subadmin?");
     if (confirmed) {
-      alert(`Subadmin ${id} deleted (simulate API call)`);
-      // Here you would make an actual DELETE API call and refetch data
+      const resp = await doDelete(`${Api.Admin.SUBADMIN}/${id}`);
+      if (resp.status === 200) {
+        fetchData();
+      }
     }
   };
+
+  // Simulate fetching subadmins from an API
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   return (
     <div>
@@ -63,20 +75,26 @@ export default function Subadmins() {
           </thead>
           <tbody>
             {subadmins.map((admin, i) => (
-              <tr key={admin.id} className="border-b dark:border-gray-700">
-                <td className="px-4 py-2">{admin.id}</td>
+              <tr key={admin._id} className="border-b dark:border-gray-700">
+                <td className="px-4 py-2">{i + 1}</td>
                 <td className="px-4 py-2">{admin.name}</td>
                 <td className="px-4 py-2">{admin.email}</td>
                 <td className="px-4 py-2">
                   <div className="flex items-center gap-2">
-                    <button className="text-blue-600 hover:underline" title="Edit" onClick={()=>{
-                        router.push(`/admin/subadmins/edit/${admin.id}`)
-                    }}>
+                    <Link
+                      href={`/admin/subadmins/edit/${admin._id}`}
+                      className="text-white hover:underline rounded p-1 bg-gray-900"
+                      title="Edit"
+                      // onClick={() => {
+                      //   router.push(`/admin/subadmins/edit/${admin._id}`);
+                      // }}
+                    >
                       <Pencil size={16} />
-                    </button>
+                    </Link>
                     <button
-                      className="text-red-600 hover:underline"
-                      onClick={() => handleDelete(admin.id)}
+                      type="button"
+                      className="text-white hover:underline cursor-pointer rounded p-1 bg-red-600"
+                      onClick={() => handleDelete(admin._id!)}
                       title="Delete"
                     >
                       <Trash2 size={16} />
@@ -88,7 +106,7 @@ export default function Subadmins() {
             {subadmins.length === 0 && (
               <tr>
                 <td colSpan={4} className="text-center py-4">
-                  No subadmins found.
+                  {loading ? <Loader /> : "No subadmins found."}
                 </td>
               </tr>
             )}
@@ -97,7 +115,7 @@ export default function Subadmins() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-center mt-6 gap-2">
+      {/* <div className="flex items-center justify-center mt-6 gap-2">
         <button
           disabled={page === 1}
           onClick={() => setPage((p) => p - 1)}
@@ -115,7 +133,7 @@ export default function Subadmins() {
         >
           Next
         </button>
-      </div>
+      </div> */}
     </div>
   );
 }
